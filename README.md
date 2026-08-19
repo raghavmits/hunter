@@ -33,3 +33,21 @@ uv run pytest               # tests
 
 Run all four before handing work back; the suite should be green and lint and
 type checks clean.
+
+## Database
+
+SQLite, one file (`hunter.db`) at the repo root — tracked and committed as the
+backup (see AGENTS.md).
+
+```bash
+uv run alembic upgrade head   # apply migrations to hunter.db
+```
+
+Override which database is used (tests, a scratch copy, etc.) with:
+
+```bash
+HUNTER_DATABASE_URL="sqlite:////absolute/path/to/other.db" uv run alembic upgrade head
+```
+
+`HUNTER_DATABASE_URL` is a full SQLAlchemy URL and is read by both the app and
+Alembic, so migrations always run against the same database the app would use.
