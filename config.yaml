@@ -1,0 +1,71 @@
+# Tunable numbers for Hunter. Changing a quota or a cadence interval is a text
+# edit here, not a migration or a code change (PLAN.md FR-2).
+
+cadence:
+  cold_outreach:
+    intervals: [5, 10, 20]
+  warm_intro_request:
+    intervals: [3, 6, 12]
+  referral_promised:
+    intervals: [2, 5, 10]
+  post_recruiter_call:
+    intervals: [3, 6, 12]
+  post_interview:
+    intervals: [3, 7, 12]
+  application_submitted:
+    intervals: [7, 14]
+  long_term_nurture:
+    intervals: [90]
+    recurring: true
+
+daily_quotas:
+  cold_outreach_sent: 10
+  warm_intro_requests_sent: 6
+  cold_applications_submitted: 6
+  referral_asks_made: 3
+
+# Deadlines are null pending #23 — the sheet's 8/17 and 8/28 deadlines have
+# passed, and whether totals carry forward or reset is not yet decided.
+campaign_targets:
+  new_connections_made:
+    target: 60
+    type: input
+    deadline: null
+  warm_outreach_with_acquaintances:
+    target: 60
+    type: input
+    deadline: null
+  cold_applications:
+    target: 100
+    type: input
+    deadline: null
+  screens_recruiter_calls:
+    target: 60
+    type: outcome
+    deadline: null
+  interviews:
+    target: 25
+    type: outcome
+    deadline: null
+  offers:
+    target: 3
+    type: outcome
+    deadline: null
+
+role_families: [FDE, SWE, MLE, MTS, OTHER]
+
+contact_sources:
+  - recruiter
+  - eng_manager
+  - friend
+  - family
+  - ex_colleague
+  - linkedin
+  - berkeley_iitk
+  - networking_event
+  - hackathon
+  - interviewed_at
+  - friend_of_friend
+
+ghost_threshold: 3
+at_risk_threshold_days: 8
