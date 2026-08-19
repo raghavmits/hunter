@@ -9,10 +9,12 @@ __pycache__/
 .ruff_cache/
 .ty_cache/
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
+# Database — hunter.db is tracked and committed as the backup (see PLAN.md §4).
+# Only the WAL sidecars are ignored; they are transient and never the source of truth.
+*.db-wal
+*.db-shm
+*.sqlite-wal
+*.sqlite-shm
 
 # Editors / OS
 .DS_Store
