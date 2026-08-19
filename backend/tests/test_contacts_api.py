@@ -51,6 +51,11 @@ def test_create_invalid_warmth_is_422(client) -> None:
     assert response.status_code == 422
 
 
+def test_create_empty_full_name_is_422(client) -> None:
+    assert client.post("/api/contacts", json={"full_name": ""}).status_code == 422
+    assert client.post("/api/contacts", json={"full_name": "   "}).status_code == 422
+
+
 def test_list_filtered_by_company(client, company_id) -> None:
     client.post("/api/contacts", json={"full_name": "With Company", "company_id": company_id})
     client.post("/api/contacts", json={"full_name": "No Company"})

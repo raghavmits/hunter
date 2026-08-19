@@ -9,13 +9,15 @@ whatever #5's migration baked in would let the two drift apart silently.
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models import ContactSource, ContactWarmth
 
 
 class ContactCreate(BaseModel):
-    full_name: str
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    full_name: str = Field(min_length=1)
     company_id: int | None = None
     title: str | None = None
     email: str | None = None
@@ -27,7 +29,9 @@ class ContactCreate(BaseModel):
 
 
 class ContactUpdate(BaseModel):
-    full_name: str | None = None
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    full_name: str | None = Field(default=None, min_length=1)
     company_id: int | None = None
     title: str | None = None
     email: str | None = None

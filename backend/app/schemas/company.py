@@ -2,20 +2,24 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models import CompanyStatus
 
 
 class CompanyCreate(BaseModel):
-    name: str
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    name: str = Field(min_length=1)
     url: str | None = None
     why_interested: str | None = None
     status: CompanyStatus = CompanyStatus.WATCHLIST
 
 
 class CompanyUpdate(BaseModel):
-    name: str | None = None
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    name: str | None = Field(default=None, min_length=1)
     url: str | None = None
     why_interested: str | None = None
     status: CompanyStatus | None = None

@@ -75,6 +75,12 @@ def test_both_company_fields_is_422(client) -> None:
     assert response.status_code == 422
 
 
+def test_empty_company_name_is_422(client) -> None:
+    assert client.post("/api/threads", json={"company_name": ""}).status_code == 422
+    assert client.post("/api/threads", json={"company_name": "   "}).status_code == 422
+    assert client.get("/api/companies").json() == []  # no garbage company created
+
+
 def test_nonexistent_company_id_is_404(client) -> None:
     response = client.post("/api/threads", json={"company_id": 999})
     assert response.status_code == 404

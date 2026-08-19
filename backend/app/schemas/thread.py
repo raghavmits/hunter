@@ -2,14 +2,16 @@
 
 from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.models import Motion, RoleFamily, Stage, ThreadStatus
 
 
 class ThreadCreate(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
     company_id: int | None = None
-    company_name: str | None = None
+    company_name: str | None = Field(default=None, min_length=1)
     contact_id: int | None = None
     role_title: str | None = None
     role_family: RoleFamily | None = None

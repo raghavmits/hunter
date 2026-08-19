@@ -98,3 +98,8 @@ def test_create_missing_name_is_422(client) -> None:
 def test_create_invalid_status_is_422(client) -> None:
     response = client.post("/api/companies", json={"name": "Acme", "status": "not-a-status"})
     assert response.status_code == 422
+
+
+def test_create_empty_name_is_422(client) -> None:
+    assert client.post("/api/companies", json={"name": ""}).status_code == 422
+    assert client.post("/api/companies", json={"name": "   "}).status_code == 422
