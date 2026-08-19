@@ -9,7 +9,7 @@ from typing import NamedTuple
 
 from app.business_days import add_business_days
 from app.config import CadenceEntry
-from app.models import TouchDirection, TouchKind
+from app.models import Thread, ThreadStatus, TouchDirection, TouchKind
 
 
 class CadenceResult(NamedTuple):
@@ -43,6 +43,18 @@ def compute_cadence(
         should_update_date=True,
         nudge_number=new_nudge_number,
     )
+
+
+def is_ghost_suggested(thread: Thread, ghost_threshold: int) -> bool:
+    """Issue #11. Never closes anything — a derived read, not a stored column.
+
+    "No inbound touch since" needs no separate check: #10's cadence engine
+    already resets nudge_number to 0 on every inbound touch, so
+    nudge_number is already an accurate count of consecutive unanswered
+    outbound touches. A thread already in a terminal status is never
+    flagged — there's nothing left to suggest for one that's already closed.
+    """
+    return thread.status == ThreadStatus.OPEN and thread.nudge_number >= ghost_threshold
 
 
 def _next_follow_up_date(
