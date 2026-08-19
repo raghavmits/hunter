@@ -66,6 +66,8 @@ def _load_config(path_str: str) -> Config:
     try:
         with path.open("r") as f:
             raw = _yaml.load(f)
+    except OSError as exc:
+        raise ConfigError(f"config file at {path} could not be read: {exc}") from exc
     except YAMLError as exc:
         raise ConfigError(f"config file at {path} is not valid YAML: {exc}") from exc
 

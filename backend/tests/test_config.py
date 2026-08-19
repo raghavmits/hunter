@@ -70,6 +70,19 @@ def test_missing_file_raises_clear_error(monkeypatch, tmp_path) -> None:
         get_config()
 
 
+def test_unreadable_file_raises_clear_error(monkeypatch, tmp_path) -> None:
+    unreadable = tmp_path / "unreadable.yaml"
+    unreadable.write_text(VALID_YAML)
+    unreadable.chmod(0o000)
+    monkeypatch.setenv(CONFIG_PATH_ENV_VAR, str(unreadable))
+
+    try:
+        with pytest.raises(ConfigError, match="could not be read"):
+            get_config()
+    finally:
+        unreadable.chmod(0o644)
+
+
 def test_second_call_is_cached_and_does_not_reread_the_file(point_at, tmp_path) -> None:
     point_at(VALID_YAML)
     first = get_config()
