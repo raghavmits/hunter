@@ -230,12 +230,15 @@ def change_stage(thread_id: int, body: StageChange, db: DbSession) -> StageChang
 
     if body.to.value in _STAGE_VALUES:
         # Moving to a stage un-terminates the thread — being "at a stage" means
-        # actively pursued. closed_at is untouched; stage_entered_at refreshes.
+        # actively pursued. stage_entered_at refreshes; closed_at is cleared,
+        # since an open thread with a stale non-null closed_at from a previous
+        # terminal transition would be inconsistent data (QA caught this).
         updated_thread = thread_repo.update(
             thread_id,
             stage=Stage(body.to.value),
             status=ThreadStatus.OPEN,
             stage_entered_at=datetime.now(UTC).replace(tzinfo=None),
+            closed_at=None,
         )
     else:
         # Terminal: stage is left exactly as it was — "rejected at screen" vs.

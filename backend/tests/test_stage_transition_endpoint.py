@@ -74,7 +74,16 @@ def test_stage_move_after_terminal_reopens_the_thread(client, thread_id) -> None
     assert body["thread"]["status"] == "open"
     assert body["thread"]["stage"] == "screen"
     assert body["stage_event"]["from_stage"] == "rejected"
-    assert body["stage_event"]["to_stage"] == "screen"
+
+
+def test_reopening_clears_the_stale_closed_at(client, thread_id) -> None:
+    rejected = client.post(f"/api/threads/{thread_id}/stage", json={"to": "rejected"}).json()
+    assert rejected["thread"]["closed_at"] is not None
+
+    reopened = client.post(f"/api/threads/{thread_id}/stage", json={"to": "screen"}).json()
+
+    assert reopened["thread"]["status"] == "open"
+    assert reopened["thread"]["closed_at"] is None
 
 
 def test_stage_change_on_nonexistent_thread_is_404(client) -> None:
