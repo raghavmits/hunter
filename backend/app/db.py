@@ -7,7 +7,9 @@ import os
 from collections.abc import Generator
 from functools import cache
 from pathlib import Path
+from typing import Annotated
 
+from fastapi import Depends
 from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
@@ -79,3 +81,9 @@ def get_db() -> Generator[Session, None, None]:
         raise
     finally:
         session.close()
+
+
+# Routers depend on this instead of writing `Session = Depends(get_db)` themselves —
+# keeps the SQLAlchemy Session import confined to db.py and repositories/ (see #8's
+# structural test) while still giving every endpoint a typed session parameter.
+DbSession = Annotated[Session, Depends(get_db)]
