@@ -2,6 +2,7 @@
 
 from app.models.company import Company, CompanyStatus
 from app.models.contact import Contact, ContactSource, ContactWarmth
+from app.models.thread import Motion, RoleFamily, Stage, Thread, ThreadStatus
 
 __all__ = [
     "Company",
@@ -9,4 +10,9 @@ __all__ = [
     "Contact",
     "ContactSource",
     "ContactWarmth",
+    "Motion",
+    "RoleFamily",
+    "Stage",
+    "Thread",
+    "ThreadStatus",
 ]
