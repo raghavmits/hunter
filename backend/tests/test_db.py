@@ -155,11 +155,16 @@ def test_exception_after_write_leaves_no_row_and_closes_the_session(scratch_clie
     assert pool.checkedout() == 0
 
 
-def test_only_db_module_imports_session_from_sqlalchemy() -> None:
+def test_only_db_and_repositories_import_session_from_sqlalchemy() -> None:
+    """db.py builds sessions; repositories/ (#8) are the only other place allowed
+    to hold a Session type hint, since that's the whole point of a repository
+    layer — everything else (routers, from #12 on) goes through a repository
+    instead of importing SQLAlchemy to get one."""
     app_dir = Path(__file__).resolve().parents[1] / "app"
+    allowed = {"db.py"} | {p.name for p in (app_dir / "repositories").glob("*.py")}
     offenders = []
     for path in app_dir.rglob("*.py"):
-        if path.name == "db.py":
+        if path.name in allowed:
             continue
         text_content = path.read_text()
         if "from sqlalchemy" in text_content and "Session" in text_content:
