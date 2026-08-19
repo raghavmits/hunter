@@ -1,10 +1,18 @@
-"""Pydantic read schema for touch (issue #15). #16 adds a Create schema later."""
+"""Pydantic schemas for touch (issues #15, #16)."""
 
 from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict
 
 from app.models import TouchChannel, TouchDirection, TouchKind
+
+
+class TouchCreate(BaseModel):
+    kind: TouchKind
+    direction: TouchDirection
+    channel: TouchChannel
+    occurred_at: date | None = None  # defaults to today (local — see #16's groomed issue)
+    note: str | None = None
 
 
 class TouchRead(BaseModel):

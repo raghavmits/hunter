@@ -59,3 +59,12 @@ class ThreadDetail(ThreadRead):
     contact: ContactRead | None
     touches: list[TouchRead]
     stage_events: list[StageEventRead]
+
+
+class TouchLogged(BaseModel):
+    """Response for POST /api/threads/{id}/touches (issue #16) — the created
+    touch plus the thread's new state, so a client never needs a second
+    request to see what changed."""
+
+    touch: TouchRead
+    thread: ThreadRead
