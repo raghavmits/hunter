@@ -1,9 +1,10 @@
-"""POST/GET /api/threads (issues #14, #15, #16)."""
+"""POST/GET /api/threads (issues #14, #15, #16, #17)."""
 
 from datetime import UTC, date, datetime
 
 from fastapi import APIRouter, HTTPException
 
+from app.business_days import add_business_days
 from app.cadence import compute_cadence, is_ghost_suggested
 from app.config import get_config
 from app.db import DbSession
@@ -18,7 +19,14 @@ from app.repositories import (
 from app.schemas.company import CompanyRead
 from app.schemas.contact import ContactRead
 from app.schemas.stage_event import StageEventRead
-from app.schemas.thread import ThreadCreate, ThreadDetail, ThreadRead, TouchLogged
+from app.schemas.thread import (
+    FollowUpSet,
+    Snooze,
+    ThreadCreate,
+    ThreadDetail,
+    ThreadRead,
+    TouchLogged,
+)
 from app.schemas.touch import TouchCreate, TouchRead
 
 router = APIRouter(prefix="/threads", tags=["threads"])
@@ -162,3 +170,34 @@ def log_touch(thread_id: int, body: TouchCreate, db: DbSession) -> TouchLogged:
         touch=TouchRead.model_validate(touch),
         thread=_to_thread_read(updated_thread, get_config().ghost_threshold),
     )
+
+
+@router.patch("/{thread_id}/follow-up", response_model=ThreadRead)
+def set_follow_up(thread_id: int, body: FollowUpSet, db: DbSession) -> ThreadRead:
+    thread_repo = ThreadRepository(db)
+    thread = thread_repo.update(
+        thread_id, next_follow_up_date=body.next_follow_up_date, follow_up_pinned=True
+    )
+    if thread is None:
+        raise HTTPException(status_code=404, detail="Thread not found")
+
+    db.commit()
+    return _to_thread_read(thread, get_config().ghost_threshold)
+
+
+@router.post("/{thread_id}/snooze", response_model=ThreadRead)
+def snooze_thread(thread_id: int, body: Snooze, db: DbSession) -> ThreadRead:
+    thread_repo = ThreadRepository(db)
+    if thread_repo.get(thread_id) is None:
+        raise HTTPException(status_code=404, detail="Thread not found")
+
+    # From today, not the thread's current date — a snooze pushing out an
+    # already-overdue date wouldn't move it into the future. Also pins the
+    # thread: without that, the next outbound touch's cadence recompute
+    # (#16) would silently overwrite the snooze.
+    new_date = add_business_days(date.today(), body.business_days)
+    thread = thread_repo.update(thread_id, next_follow_up_date=new_date, follow_up_pinned=True)
+    assert thread is not None  # existence just checked above
+
+    db.commit()
+    return _to_thread_read(thread, get_config().ghost_threshold)

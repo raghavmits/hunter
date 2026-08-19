@@ -68,3 +68,18 @@ class TouchLogged(BaseModel):
 
     touch: TouchRead
     thread: ThreadRead
+
+
+class FollowUpSet(BaseModel):
+    """Issue #17. Not nullable through this endpoint — FR-8 calls a manually
+    set date permanent for the thread; clearing it would be a different,
+    not-yet-built action."""
+
+    next_follow_up_date: date
+
+
+class Snooze(BaseModel):
+    """Issue #17. Must be positive — snoozing by zero or a negative count
+    isn't a coherent action."""
+
+    business_days: int = Field(gt=0)
