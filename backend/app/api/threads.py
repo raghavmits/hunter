@@ -1,4 +1,4 @@
-"""POST/GET /api/threads (issues #14, #15, #16, #17)."""
+"""POST/GET /api/threads (issues #14, #15, #16, #17, #18)."""
 
 from datetime import UTC, date, datetime
 
@@ -8,7 +8,7 @@ from app.business_days import add_business_days
 from app.cadence import compute_cadence, is_ghost_suggested
 from app.config import get_config
 from app.db import DbSession
-from app.models import Motion, RoleFamily, Stage, Thread, ThreadStatus
+from app.models import Motion, RoleFamily, Stage, StageOrTerminal, Thread, ThreadStatus
 from app.repositories import (
     CompanyRepository,
     ContactRepository,
@@ -18,10 +18,11 @@ from app.repositories import (
 )
 from app.schemas.company import CompanyRead
 from app.schemas.contact import ContactRead
-from app.schemas.stage_event import StageEventRead
+from app.schemas.stage_event import StageChange, StageEventRead
 from app.schemas.thread import (
     FollowUpSet,
     Snooze,
+    StageChanged,
     ThreadCreate,
     ThreadDetail,
     ThreadRead,
@@ -30,6 +31,8 @@ from app.schemas.thread import (
 from app.schemas.touch import TouchCreate, TouchRead
 
 router = APIRouter(prefix="/threads", tags=["threads"])
+
+_STAGE_VALUES = {s.value for s in Stage}
 
 
 def _days_in_stage(thread: Thread) -> int:
@@ -201,3 +204,51 @@ def snooze_thread(thread_id: int, body: Snooze, db: DbSession) -> ThreadRead:
 
     db.commit()
     return _to_thread_read(thread, get_config().ghost_threshold)
+
+
+@router.post("/{thread_id}/stage", response_model=StageChanged, status_code=201)
+def change_stage(thread_id: int, body: StageChange, db: DbSession) -> StageChanged:
+    thread_repo = ThreadRepository(db)
+    thread = thread_repo.get(thread_id)
+    if thread is None:
+        raise HTTPException(status_code=404, detail="Thread not found")
+
+    # from_stage reads the thread's actual current columns (status if
+    # terminal, else stage), not the last recorded event — the two can
+    # diverge, since #14 never writes an initial stage_event on creation.
+    from_stage = StageOrTerminal(
+        thread.status.value if thread.status != ThreadStatus.OPEN else thread.stage.value
+    )
+
+    stage_event = StageEventRepository(db).create(
+        thread_id=thread_id,
+        from_stage=from_stage,
+        to_stage=body.to,
+        occurred_at=datetime.now(UTC).replace(tzinfo=None),
+        note=body.note,
+    )
+
+    if body.to.value in _STAGE_VALUES:
+        # Moving to a stage un-terminates the thread — being "at a stage" means
+        # actively pursued. closed_at is untouched; stage_entered_at refreshes.
+        updated_thread = thread_repo.update(
+            thread_id,
+            stage=Stage(body.to.value),
+            status=ThreadStatus.OPEN,
+            stage_entered_at=datetime.now(UTC).replace(tzinfo=None),
+        )
+    else:
+        # Terminal: stage is left exactly as it was — "rejected at screen" vs.
+        # "rejected at interview" is meaningful history, not something closing erases.
+        updated_thread = thread_repo.update(
+            thread_id,
+            status=ThreadStatus(body.to.value),
+            closed_at=datetime.now(UTC).replace(tzinfo=None),
+        )
+    assert updated_thread is not None  # just fetched above, can't have vanished mid-request
+
+    db.commit()
+    return StageChanged(
+        stage_event=StageEventRead.model_validate(stage_event),
+        thread=_to_thread_read(updated_thread, get_config().ghost_threshold),
+    )

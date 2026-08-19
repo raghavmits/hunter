@@ -83,3 +83,11 @@ class Snooze(BaseModel):
     isn't a coherent action."""
 
     business_days: int = Field(gt=0)
+
+
+class StageChanged(BaseModel):
+    """Response for POST /api/threads/{id}/stage (issue #18) — same shape as
+    #16's TouchLogged: the created event plus the thread's new state."""
+
+    stage_event: StageEventRead
+    thread: ThreadRead
