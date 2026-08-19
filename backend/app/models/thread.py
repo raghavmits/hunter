@@ -19,6 +19,8 @@ from app.models._enum import enum_values
 if TYPE_CHECKING:
     from app.models.company import Company
     from app.models.contact import Contact
+    from app.models.stage_event import StageEvent
+    from app.models.touch import Touch
 
 
 class RoleFamily(StrEnum):
@@ -97,3 +99,9 @@ class Thread(Base):
 
     company: Mapped["Company"] = relationship()
     contact: Mapped["Contact | None"] = relationship()
+    touches: Mapped[list["Touch"]] = relationship(
+        back_populates="thread", cascade="all, delete-orphan"
+    )
+    stage_events: Mapped[list["StageEvent"]] = relationship(
+        back_populates="thread", cascade="all, delete-orphan"
+    )
