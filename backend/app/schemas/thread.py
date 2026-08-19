@@ -1,10 +1,14 @@
-"""Pydantic schemas for /api/threads (issue #14)."""
+"""Pydantic schemas for /api/threads (issues #14, #15)."""
 
 from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.models import Motion, RoleFamily, Stage, ThreadStatus
+from app.schemas.company import CompanyRead
+from app.schemas.contact import ContactRead
+from app.schemas.stage_event import StageEventRead
+from app.schemas.touch import TouchRead
 
 
 class ThreadCreate(BaseModel):
@@ -46,3 +50,12 @@ class ThreadRead(BaseModel):
     notes: str | None
     created_at: datetime
     closed_at: datetime | None
+    is_ghost_suggested: bool
+    days_in_stage: int
+
+
+class ThreadDetail(ThreadRead):
+    company: CompanyRead
+    contact: ContactRead | None
+    touches: list[TouchRead]
+    stage_events: list[StageEventRead]
