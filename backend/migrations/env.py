@@ -4,6 +4,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+# Importing app.models registers every model class on Base.metadata below —
+# without this import, autogenerate would see an empty metadata and think
+# every existing table needs dropping.
+import app.models  # noqa: E402, F401
 from alembic import context  # noqa: E402
 from app.db import Base, get_database_url, get_engine  # noqa: E402
 
