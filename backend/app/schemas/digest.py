@@ -19,6 +19,8 @@ class DigestRow(BaseModel):
     stage: Stage
     days_overdue: int | None
     days_in_stage: int
+    nudge_number: int
+    is_ghost_suggested: bool
 
 
 class Digest(BaseModel):

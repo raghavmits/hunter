@@ -12,6 +12,8 @@ export interface DigestRow {
   stage: Stage;
   days_overdue: number | null;
   days_in_stage: number;
+  nudge_number: number;
+  is_ghost_suggested: boolean;
 }
 
 export interface Digest {

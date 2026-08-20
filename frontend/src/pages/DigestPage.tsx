@@ -1,8 +1,10 @@
 // The real digest (issue #28) — #26's health-check placeholder is gone.
-import { useEffect, useState } from "react";
-import { getDigest, type Digest } from "../api/digest";
+import { useCallback, useEffect, useState } from "react";
+import { getDigest, type Digest, type Stage } from "../api/digest";
 import { getQuotaProgress, type QuotaSummary } from "../api/quota";
+import { changeStage, logTouch, snoozeThread, type TerminalStatus, type TouchKind } from "../api/threads";
 import { DigestSection } from "../components/DigestSection";
+import { RowActions } from "../components/RowActions";
 
 const QUOTA_LABELS: Record<keyof QuotaSummary, string> = {
   cold_outreach_sent: "Cold outreach sent",
@@ -15,15 +17,47 @@ export function DigestPage() {
   const [digest, setDigest] = useState<Digest | null>(null);
   const [quotas, setQuotas] = useState<QuotaSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingId, setPendingId] = useState<number | null>(null);
+  const [rowErrors, setRowErrors] = useState<Record<number, string>>({});
+
+  const refetch = useCallback(() => {
+    return Promise.all([getDigest(), getQuotaProgress()]).then(([digestResult, quotaResult]) => {
+      setDigest(digestResult);
+      setQuotas(quotaResult);
+    });
+  }, []);
 
   useEffect(() => {
-    Promise.all([getDigest(), getQuotaProgress()])
-      .then(([digestResult, quotaResult]) => {
-        setDigest(digestResult);
-        setQuotas(quotaResult);
-      })
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
-  }, []);
+    refetch().catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
+  }, [refetch]);
+
+  async function runAction(threadId: number, action: () => Promise<unknown>) {
+    setPendingId(threadId);
+    setRowErrors((prev) => ({ ...prev, [threadId]: "" }));
+    try {
+      await action();
+      await refetch();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setRowErrors((prev) => ({ ...prev, [threadId]: message }));
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  function renderActions(row: Digest["overdue"][number]) {
+    return (
+      <RowActions
+        row={row}
+        pending={pendingId === row.thread_id}
+        error={rowErrors[row.thread_id] || null}
+        onLog={(kind: TouchKind, note) => runAction(row.thread_id, () => logTouch(row.thread_id, kind, note))}
+        onSnooze={(days) => runAction(row.thread_id, () => snoozeThread(row.thread_id, days))}
+        onAdvance={(to: Stage) => runAction(row.thread_id, () => changeStage(row.thread_id, to))}
+        onClose={(to: TerminalStatus) => runAction(row.thread_id, () => changeStage(row.thread_id, to))}
+      />
+    );
+  }
 
   if (error) {
     return (
@@ -53,6 +87,7 @@ export function DigestPage() {
         emptyMessage="Nothing overdue."
         daysColumnLabel="Days overdue"
         daysValue={(row) => row.days_overdue ?? 0}
+        renderActions={renderActions}
       />
 
       <DigestSection
@@ -61,6 +96,7 @@ export function DigestPage() {
         emptyMessage="Nothing due today."
         daysColumnLabel="Days overdue"
         daysValue={(row) => row.days_overdue ?? 0}
+        renderActions={renderActions}
       />
 
       <DigestSection
@@ -69,6 +105,7 @@ export function DigestPage() {
         emptyMessage="Nothing at risk."
         daysColumnLabel="Days in stage"
         daysValue={(row) => row.days_in_stage}
+        renderActions={renderActions}
       />
 
       <section>

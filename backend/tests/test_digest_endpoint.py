@@ -149,3 +149,18 @@ def test_digest_row_carries_company_and_contact_names(client, company_id) -> Non
     row = digest["due_today"][0]
     assert row["company_name"] == "Acme"
     assert row["contact_name"] == "Jamie Doe"
+
+
+def test_digest_row_carries_ghost_suggestion_state(client, company_id) -> None:
+    below_threshold_id = _new_thread(client, company_id)
+    at_threshold_id = _new_thread(client, company_id)
+    _set(below_threshold_id, next_follow_up_date=TODAY, nudge_number=2)
+    _set(at_threshold_id, next_follow_up_date=TODAY, nudge_number=3)
+
+    digest = client.get("/api/digest").json()
+    rows = {row["thread_id"]: row for row in digest["due_today"]}
+
+    assert rows[below_threshold_id]["nudge_number"] == 2
+    assert rows[below_threshold_id]["is_ghost_suggested"] is False
+    assert rows[at_threshold_id]["nudge_number"] == 3
+    assert rows[at_threshold_id]["is_ghost_suggested"] is True

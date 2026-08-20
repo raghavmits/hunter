@@ -4,7 +4,7 @@ from datetime import UTC, date, datetime
 
 from fastapi import APIRouter
 
-from app.cadence import days_in_stage
+from app.cadence import days_in_stage, is_ghost_suggested
 from app.config import get_config
 from app.db import DbSession
 from app.digest import DigestRow as DigestRowInternal
@@ -17,7 +17,7 @@ from app.schemas.digest import DigestRow as DigestRowSchema
 router = APIRouter(prefix="/digest", tags=["digest"])
 
 
-def _to_row(row: DigestRowInternal, now_utc: datetime) -> DigestRowSchema:
+def _to_row(row: DigestRowInternal, now_utc: datetime, ghost_threshold: int) -> DigestRowSchema:
     thread = row.thread
     return DigestRowSchema(
         thread_id=thread.id,
@@ -28,6 +28,8 @@ def _to_row(row: DigestRowInternal, now_utc: datetime) -> DigestRowSchema:
         stage=thread.stage,
         days_overdue=row.days_overdue,
         days_in_stage=days_in_stage(thread, now_utc),
+        nudge_number=thread.nudge_number,
+        is_ghost_suggested=is_ghost_suggested(thread, ghost_threshold),
     )
 
 
@@ -45,8 +47,8 @@ def get_digest(db: DbSession) -> Digest:
     )
 
     return Digest(
-        overdue=[_to_row(r, now_utc) for r in result.overdue],
-        due_today=[_to_row(r, now_utc) for r in result.due_today],
-        at_risk=[_to_row(r, now_utc) for r in result.at_risk],
+        overdue=[_to_row(r, now_utc, config.ghost_threshold) for r in result.overdue],
+        due_today=[_to_row(r, now_utc, config.ghost_threshold) for r in result.due_today],
+        at_risk=[_to_row(r, now_utc, config.ghost_threshold) for r in result.at_risk],
         live_conversation_count=result.live_conversation_count,
     )
