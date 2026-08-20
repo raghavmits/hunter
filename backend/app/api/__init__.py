@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from app.api.companies import router as companies_router
 from app.api.contacts import router as contacts_router
+from app.api.corpus import router as corpus_router
 from app.api.digest import router as digest_router
 from app.api.funnel import router as funnel_router
 from app.api.health import router as health_router
@@ -16,6 +17,7 @@ router.include_router(health_router)
 router.include_router(companies_router)
 router.include_router(contacts_router)
 router.include_router(threads_router)
+router.include_router(corpus_router)
 router.include_router(digest_router)
 router.include_router(quota_router)
 router.include_router(targets_router)
