@@ -14,6 +14,13 @@ export interface QuotaSummary {
   referral_asks_made: QuotaProgress;
 }
 
+export const QUOTA_LABELS: Record<keyof QuotaSummary, string> = {
+  cold_outreach_sent: "Cold outreach sent",
+  warm_intro_requests_sent: "Warm intro requests sent",
+  cold_applications_submitted: "Cold applications submitted",
+  referral_asks_made: "Referral asks made",
+};
+
 export function getQuotaProgress(): Promise<QuotaSummary> {
   return apiFetch<QuotaSummary>("/quotas");
 }

@@ -1,17 +1,10 @@
 // The real digest (issue #28) — #26's health-check placeholder is gone.
 import { useCallback, useEffect, useState } from "react";
 import { getDigest, type Digest, type Stage } from "../api/digest";
-import { getQuotaProgress, type QuotaSummary } from "../api/quota";
+import { getQuotaProgress, QUOTA_LABELS, type QuotaSummary } from "../api/quota";
 import { changeStage, logTouch, snoozeThread, type TerminalStatus, type TouchKind } from "../api/threads";
 import { DigestSection } from "../components/DigestSection";
 import { RowActions } from "../components/RowActions";
-
-const QUOTA_LABELS: Record<keyof QuotaSummary, string> = {
-  cold_outreach_sent: "Cold outreach sent",
-  warm_intro_requests_sent: "Warm intro requests sent",
-  cold_applications_submitted: "Cold applications submitted",
-  referral_asks_made: "Referral asks made",
-};
 
 export function DigestPage() {
   const [digest, setDigest] = useState<Digest | null>(null);
