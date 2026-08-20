@@ -16,6 +16,12 @@ class TouchRepository:
         stmt = select(Touch).where(Touch.thread_id == thread_id).order_by(Touch.occurred_at.asc())
         return list(self.session.execute(stmt).scalars().all())
 
+    def list_by_occurred_at(self, occurred_at: date) -> list[Touch]:
+        """Issue #20: every touch on a given day, across all threads — the
+        quota endpoint groups these by kind/direction itself."""
+        stmt = select(Touch).where(Touch.occurred_at == occurred_at)
+        return list(self.session.execute(stmt).scalars().all())
+
     def create(
         self,
         thread_id: int,
