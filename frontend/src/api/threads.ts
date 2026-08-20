@@ -82,7 +82,9 @@ export type ThreadStatus = "open" | TerminalStatus;
 export interface ThreadDetail {
   id: number;
   company_id: number;
+  company_name: string;
   contact_id: number | null;
+  contact_name: string | null;
   role_title: string | null;
   role_family: RoleFamily | null;
   motion: Motion | null;
@@ -106,6 +108,39 @@ export interface ThreadDetail {
 
 export function getThread(threadId: number): Promise<ThreadDetail> {
   return apiFetch<ThreadDetail>(`/threads/${threadId}`);
+}
+
+export interface ThreadListItem {
+  id: number;
+  company_id: number;
+  company_name: string;
+  contact_id: number | null;
+  contact_name: string | null;
+  role_title: string | null;
+  role_family: RoleFamily | null;
+  motion: Motion | null;
+  stage: Stage;
+  status: ThreadStatus;
+  next_follow_up_date: string | null;
+  nudge_number: number;
+  is_ghost_suggested: boolean;
+}
+
+export interface ThreadListFilters {
+  status?: ThreadStatus;
+  stage?: Stage;
+  motion?: Motion;
+  role_family?: RoleFamily;
+  company_id?: number;
+}
+
+export function listThreads(filters: ThreadListFilters = {}): Promise<ThreadListItem[]> {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters)) {
+    if (value !== undefined) params.set(key, String(value));
+  }
+  const query = params.toString();
+  return apiFetch<ThreadListItem[]>(`/threads${query ? `?${query}` : ""}`);
 }
 
 export interface TouchCreateInput {

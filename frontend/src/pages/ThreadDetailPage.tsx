@@ -1,6 +1,6 @@
 // Full history of one thread, with every action inline (issue #31).
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import type { Stage } from "../api/digest";
 import {
   changeStage,
@@ -149,7 +149,7 @@ export function ThreadDetailPage() {
   return (
     <div>
       <h1>
-        {thread.company.name}
+        <Link to={`/companies/${thread.company_id}`}>{thread.company.name}</Link>
         {thread.role_title ? ` — ${thread.role_title}` : ""}
       </h1>
 

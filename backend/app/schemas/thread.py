@@ -34,7 +34,9 @@ class ThreadRead(BaseModel):
 
     id: int
     company_id: int
+    company_name: str
     contact_id: int | None
+    contact_name: str | None
     role_title: str | None
     role_family: RoleFamily | None
     motion: Motion | None

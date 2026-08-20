@@ -19,6 +19,7 @@ class ThreadRepository:
         stage: Stage | None = None,
         motion: Motion | None = None,
         role_family: RoleFamily | None = None,
+        company_id: int | None = None,
     ) -> list[Thread]:
         stmt = select(Thread)
         if status is not None:
@@ -29,6 +30,8 @@ class ThreadRepository:
             stmt = stmt.where(Thread.motion == motion)
         if role_family is not None:
             stmt = stmt.where(Thread.role_family == role_family)
+        if company_id is not None:
+            stmt = stmt.where(Thread.company_id == company_id)
         return list(self.session.execute(stmt).scalars().all())
 
     def create(

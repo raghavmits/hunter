@@ -39,7 +39,9 @@ def _to_thread_read(thread: Thread, ghost_threshold: int) -> ThreadRead:
     return ThreadRead(
         id=thread.id,
         company_id=thread.company_id,
+        company_name=thread.company.name,
         contact_id=thread.contact_id,
+        contact_name=thread.contact.full_name if thread.contact else None,
         role_title=thread.role_title,
         role_family=thread.role_family,
         motion=thread.motion,
@@ -96,9 +98,10 @@ def list_threads(
     stage: Stage | None = None,
     motion: Motion | None = None,
     role_family: RoleFamily | None = None,
+    company_id: int | None = None,
 ) -> list[ThreadRead]:
     threads = ThreadRepository(db).list(
-        status=status, stage=stage, motion=motion, role_family=role_family
+        status=status, stage=stage, motion=motion, role_family=role_family, company_id=company_id
     )
     ghost_threshold = get_config().ghost_threshold
     return [_to_thread_read(t, ghost_threshold) for t in threads]

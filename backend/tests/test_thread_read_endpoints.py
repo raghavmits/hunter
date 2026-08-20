@@ -175,3 +175,33 @@ def test_list_filters_by_status_stage_motion_role_family(client) -> None:
     assert [t["id"] for t in client.get("/api/threads", params={"status": "withdrawn"}).json()] == [
         b["id"]
     ]
+
+
+def test_list_filters_by_company_id(client) -> None:
+    company_a = client.post("/api/companies", json={"name": "Acme"}).json()
+    company_b = client.post("/api/companies", json={"name": "Zeta"}).json()
+    a = client.post("/api/threads", json={"company_id": company_a["id"]}).json()
+    client.post("/api/threads", json={"company_id": company_b["id"]})
+
+    response = client.get("/api/threads", params={"company_id": company_a["id"]})
+
+    assert [t["id"] for t in response.json()] == [a["id"]]
+
+
+def test_read_endpoints_carry_company_and_contact_name(client) -> None:
+    company = client.post("/api/companies", json={"name": "Acme"}).json()
+    contact = client.post(
+        "/api/contacts", json={"full_name": "Jamie Doe", "company_id": company["id"]}
+    ).json()
+    with_contact = client.post(
+        "/api/threads", json={"company_id": company["id"], "contact_id": contact["id"]}
+    ).json()
+    without_contact = client.post("/api/threads", json={"company_id": company["id"]}).json()
+
+    assert with_contact["company_name"] == "Acme"
+    assert with_contact["contact_name"] == "Jamie Doe"
+    assert without_contact["company_name"] == "Acme"
+    assert without_contact["contact_name"] is None
+
+    listed = {t["id"]: t for t in client.get("/api/threads").json()}
+    assert listed[with_contact["id"]]["contact_name"] == "Jamie Doe"

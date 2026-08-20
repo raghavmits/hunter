@@ -4,10 +4,10 @@ import type { DigestRow, Stage } from "../api/digest";
 import {
   nextStage as computeNextStage,
   TERMINAL_STATUS_LABELS,
-  TOUCH_KIND_LABELS,
   type TerminalStatus,
   type TouchKind,
 } from "../api/threads";
+import { QuickLogControl } from "./QuickLogControl";
 
 const SNOOZE_OPTIONS = [1, 3, 7];
 
@@ -22,17 +22,9 @@ interface Props {
 }
 
 export function RowActions({ row, pending, error, onLog, onSnooze, onAdvance, onClose }: Props) {
-  const [openPanel, setOpenPanel] = useState<"log" | "close" | null>(null);
-  const [logKind, setLogKind] = useState<TouchKind>("cold_outreach");
-  const [logNote, setLogNote] = useState("");
+  const [openPanel, setOpenPanel] = useState<"close" | null>(null);
 
   const next = computeNextStage(row.stage);
-
-  function submitLog() {
-    onLog(logKind, logNote.trim() || undefined);
-    setLogNote("");
-    setOpenPanel(null);
-  }
 
   return (
     <td>
@@ -45,9 +37,7 @@ export function RowActions({ row, pending, error, onLog, onSnooze, onAdvance, on
         </p>
       )}
 
-      <button type="button" disabled={pending} onClick={() => setOpenPanel(openPanel === "log" ? null : "log")}>
-        Log
-      </button>
+      <QuickLogControl pending={pending} onLog={onLog} />
 
       {SNOOZE_OPTIONS.map((days) => (
         <button key={days} type="button" disabled={pending} onClick={() => onSnooze(days)}>
@@ -64,30 +54,6 @@ export function RowActions({ row, pending, error, onLog, onSnooze, onAdvance, on
       <button type="button" disabled={pending} onClick={() => setOpenPanel(openPanel === "close" ? null : "close")}>
         Close
       </button>
-
-      {openPanel === "log" && (
-        <div>
-          <select value={logKind} onChange={(e) => setLogKind(e.target.value as TouchKind)}>
-            {(Object.keys(TOUCH_KIND_LABELS) as TouchKind[]).map((kind) => (
-              <option key={kind} value={kind}>
-                {TOUCH_KIND_LABELS[kind]}
-              </option>
-            ))}
-          </select>
-          <input
-            type="text"
-            placeholder="Note (optional)"
-            value={logNote}
-            onChange={(e) => setLogNote(e.target.value)}
-          />
-          <button type="button" disabled={pending} onClick={submitLog}>
-            Submit
-          </button>
-          <button type="button" onClick={() => setOpenPanel(null)}>
-            Cancel
-          </button>
-        </div>
-      )}
 
       {openPanel === "close" && (
         <div>

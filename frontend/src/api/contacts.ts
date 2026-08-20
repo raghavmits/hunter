@@ -1,12 +1,14 @@
-// Matches app/schemas/contact.py (issue #13) — only the fields quick-add (#30) needs.
+// Matches app/schemas/contact.py (issue #13).
 import { apiFetch } from "./client";
 
 export interface Contact {
   id: number;
   company_id: number | null;
   full_name: string;
+  title: string | null;
 }
 
-export function getContacts(): Promise<Contact[]> {
-  return apiFetch<Contact[]>("/contacts");
+export function getContacts(companyId?: number): Promise<Contact[]> {
+  const query = companyId !== undefined ? `?company_id=${companyId}` : "";
+  return apiFetch<Contact[]>(`/contacts${query}`);
 }
