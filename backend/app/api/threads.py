@@ -8,7 +8,15 @@ from app.business_days import add_business_days
 from app.cadence import compute_cadence, days_in_stage, is_ghost_suggested
 from app.config import get_config
 from app.db import DbSession
-from app.models import Motion, RoleFamily, Stage, StageOrTerminal, Thread, ThreadStatus
+from app.models import (
+    Motion,
+    RoleFamily,
+    Stage,
+    StageOrTerminal,
+    Thread,
+    ThreadStatus,
+    TouchDirection,
+)
 from app.repositories import (
     CompanyRepository,
     ContactRepository,
@@ -16,6 +24,7 @@ from app.repositories import (
     ThreadRepository,
     TouchRepository,
 )
+from app.schemas.bulk_outreach import BulkOutreachRequest, BulkOutreachResult, BulkOutreachRowResult
 from app.schemas.company import CompanyRead
 from app.schemas.contact import ContactRead
 from app.schemas.stage_event import StageChange, StageEventRead
@@ -89,6 +98,70 @@ def create_thread(body: ThreadCreate, db: DbSession) -> ThreadRead:
     )
     db.commit()
     return _to_thread_read(thread, get_config().ghost_threshold)
+
+
+@router.post("/bulk-outreach", response_model=BulkOutreachResult, status_code=201)
+def bulk_outreach(body: BulkOutreachRequest, db: DbSession) -> BulkOutreachResult:
+    """Issue #34. Each row is validated before any write happens for it, so
+    one bad row (blank company name, a contact_id that doesn't exist) never
+    discards the rows around it — see the groomed issue for why this doesn't
+    need per-row SAVEPOINTs. Cadence runs per row exactly like #16's
+    log_touch, or bulk-created threads would never get a follow-up date."""
+    company_repo = CompanyRepository(db)
+    contact_repo = ContactRepository(db)
+    thread_repo = ThreadRepository(db)
+    touch_repo = TouchRepository(db)
+    config = get_config()
+    occurred_at = body.occurred_at if body.occurred_at is not None else date.today()
+
+    results: list[BulkOutreachRowResult] = []
+    for index, row in enumerate(body.rows):
+        name = row.company_name.strip()
+        if not name:
+            results.append(
+                BulkOutreachRowResult(
+                    row_index=index, success=False, error="Company name is required"
+                )
+            )
+            continue
+        if row.contact_id is not None and contact_repo.get(row.contact_id) is None:
+            results.append(
+                BulkOutreachRowResult(row_index=index, success=False, error="Contact not found")
+            )
+            continue
+
+        company = company_repo.get_by_name(name)
+        if company is None:
+            company = company_repo.create(name=name)
+
+        thread = thread_repo.create(
+            company_id=company.id, contact_id=row.contact_id, role_title=row.role_title
+        )
+        touch_repo.create(
+            thread_id=thread.id,
+            kind=body.kind,
+            direction=TouchDirection.OUTBOUND,
+            channel=body.channel,
+            occurred_at=occurred_at,
+        )
+
+        cadence_result = compute_cadence(
+            kind=body.kind,
+            direction=TouchDirection.OUTBOUND,
+            occurred_at=occurred_at,
+            current_nudge_number=0,
+            follow_up_pinned=False,
+            cadence=config.cadence,
+        )
+        update_fields: dict[str, object] = {"nudge_number": cadence_result.nudge_number}
+        if cadence_result.should_update_date:
+            update_fields["next_follow_up_date"] = cadence_result.next_follow_up_date
+        thread_repo.update(thread.id, **update_fields)
+
+        results.append(BulkOutreachRowResult(row_index=index, success=True, thread_id=thread.id))
+
+    db.commit()
+    return BulkOutreachResult(results=results)
 
 
 @router.get("", response_model=list[ThreadRead])

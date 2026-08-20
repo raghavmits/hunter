@@ -216,3 +216,34 @@ export function createThread(input: ThreadCreateInput): Promise<unknown> {
     body: JSON.stringify(input),
   });
 }
+
+export interface BulkOutreachRow {
+  company_name: string;
+  contact_id?: number;
+  role_title?: string;
+}
+
+export interface BulkOutreachRequest {
+  kind: TouchKind;
+  channel: TouchChannel;
+  occurred_at?: string;
+  rows: BulkOutreachRow[];
+}
+
+export interface BulkOutreachRowResult {
+  row_index: number;
+  success: boolean;
+  error: string | null;
+  thread_id: number | null;
+}
+
+export interface BulkOutreachResult {
+  results: BulkOutreachRowResult[];
+}
+
+export function bulkOutreach(request: BulkOutreachRequest): Promise<BulkOutreachResult> {
+  return apiFetch<BulkOutreachResult>("/threads/bulk-outreach", {
+    method: "POST",
+    body: JSON.stringify(request),
+  });
+}

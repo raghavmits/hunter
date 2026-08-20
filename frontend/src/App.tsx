@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import { Layout } from "./components/Layout";
+import { BulkOutreachPage } from "./pages/BulkOutreachPage";
 import { CompanyPage } from "./pages/CompanyPage";
 import { CorpusPage } from "./pages/CorpusPage";
 import { DigestPage } from "./pages/DigestPage";
@@ -14,6 +15,7 @@ function App() {
         <Route element={<Layout />}>
           <Route index element={<DigestPage />} />
           <Route path="threads" element={<ThreadsPage />} />
+          <Route path="threads/bulk" element={<BulkOutreachPage />} />
           <Route path="threads/:id" element={<ThreadDetailPage />} />
           <Route path="companies/:id" element={<CompanyPage />} />
           <Route path="funnel" element={<FunnelPage />} />

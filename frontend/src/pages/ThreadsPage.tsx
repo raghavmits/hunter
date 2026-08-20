@@ -60,6 +60,10 @@ export function ThreadsPage() {
     <div>
       <h1>Threads</h1>
 
+      <p>
+        <Link to="/threads/bulk">Bulk outreach</Link>
+      </p>
+
       <div>
         <label>
           Status
