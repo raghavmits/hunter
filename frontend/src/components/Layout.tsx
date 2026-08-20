@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from "react-router";
 import styles from "./Layout.module.css";
+import { QuickAddDialog } from "./QuickAddDialog";
 
 const NAV_ITEMS = [
   { to: "/", label: "Digest" },
@@ -26,6 +27,7 @@ export function Layout() {
             </li>
           ))}
         </ul>
+        <QuickAddDialog />
       </nav>
       <main className={styles.main}>
         <Outlet />

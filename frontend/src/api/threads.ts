@@ -50,3 +50,37 @@ export function changeStage(threadId: number, to: string): Promise<unknown> {
     body: JSON.stringify({ to }),
   });
 }
+
+export type RoleFamily = "FDE" | "SWE" | "MLE" | "MTS" | "OTHER";
+
+export const ROLE_FAMILY_LABELS: Record<RoleFamily, string> = {
+  FDE: "FDE",
+  SWE: "SWE",
+  MLE: "MLE",
+  MTS: "MTS",
+  OTHER: "Other",
+};
+
+export type Motion = "cold_outreach" | "warm_outreach" | "cold_application";
+
+export const MOTION_LABELS: Record<Motion, string> = {
+  cold_outreach: "Cold outreach",
+  warm_outreach: "Warm outreach",
+  cold_application: "Cold application",
+};
+
+export interface ThreadCreateInput {
+  company_name: string;
+  role_title?: string;
+  role_family?: RoleFamily;
+  contact_id?: number;
+  motion?: Motion;
+  jd_url?: string;
+}
+
+export function createThread(input: ThreadCreateInput): Promise<unknown> {
+  return apiFetch("/threads", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
