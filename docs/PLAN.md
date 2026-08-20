@@ -1,4 +1,4 @@
-1;2A1;2A1;2A1;2B1;2B1;2B1;2A# Job Search Tracker
+# Job Search Tracker
 
 Status: draft
 Owner: Raghav (single user)
@@ -9,10 +9,15 @@ Last updated: 2026-08-20
 ## What it is
 
 A local, single-user tool for tracking job-search contacts and companies.
-`tracker.html` — one static HTML file at the repo root, opened directly
-in a browser. Two tabs, Contacts and Companies, each an editable table,
-linked to each other. Data lives in the browser's `localStorage`. No
-backend, no database, no build step.
+
+**Target architecture:** FastAPI backend + PostgreSQL database (via SQLAlchemy +
+Alembic), React + Vite + TypeScript frontend. Python tooling: `uv`, `pytest`,
+`ruff`, `ty`. Runs entirely locally — no LLM dependency, no external services,
+deterministic.
+
+`tracker.html` at the repo root is a working prototype (localStorage, no build
+step). It defines the UX and data model but will be replaced by the full-stack
+implementation.
 
 ---
 
@@ -34,7 +39,7 @@ erDiagram
         date lastConnected "nullable"
         date nextFollowUp "nullable, manually set"
         enum status "Reached Out|No Response|Replied|Call Scheduled|Referred|Interviewing|Dead End, nullable"
-        text hiringCompanies "free text, nullable — companies this contact might refer me into, not necessarily their employer"
+        string[] hiringCompanies "nullable — company names this contact might refer me into; each name links to a Company record if one exists"
         text notes "nullable"
     }
 
@@ -47,6 +52,7 @@ erDiagram
         string role "the specific role being tracked here, free text, nullable"
         string url "nullable"
         string careersPage "nullable"
+        text notes "nullable"
     }
 ```
 
