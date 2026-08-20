@@ -53,26 +53,28 @@ HUNTER_DATABASE_URL="sqlite:////absolute/path/to/other.db" uv run alembic upgrad
 `HUNTER_DATABASE_URL` is a full SQLAlchemy URL and is read by both the app and
 Alembic, so migrations always run against the same database the app would use.
 
-## Frontend
+## Running the app
 
-Requires [Node.js](https://nodejs.org/) 20+.
+Requires [Node.js](https://nodejs.org/) 20+ in addition to `uv`. One-time setup:
+
+```bash
+uv sync
+cd frontend && npm install && cd ..
+```
+
+Then, the single entry point — runs migrations and starts the backend
+(`:8000`) and the Vite dev server (`:5173`, proxying `/api/*` to the
+backend) together, output interleaved in one terminal, both stopped
+cleanly on Ctrl-C:
+
+```bash
+make dev
+```
+
+## Frontend
 
 ```bash
 cd frontend
-npm install
-npm run dev      # starts Vite on http://localhost:5173
-```
-
-The frontend expects the backend running too — its dev server proxies
-`/api/*` requests to `http://localhost:8000`:
-
-```bash
-uv run uvicorn app.main:app --app-dir backend --reload
-```
-
-(A single command to start both together lands in #27.)
-
-```bash
 npm run build     # type-check (tsc -b) and production build
 npm run lint       # oxlint
 ```
