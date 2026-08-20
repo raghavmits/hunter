@@ -5,7 +5,7 @@ from datetime import UTC, date, datetime
 from fastapi import APIRouter, HTTPException
 
 from app.business_days import add_business_days
-from app.cadence import compute_cadence, is_ghost_suggested
+from app.cadence import compute_cadence, days_in_stage, is_ghost_suggested
 from app.config import get_config
 from app.db import DbSession
 from app.models import Motion, RoleFamily, Stage, StageOrTerminal, Thread, ThreadStatus
@@ -35,19 +35,6 @@ router = APIRouter(prefix="/threads", tags=["threads"])
 _STAGE_VALUES = {s.value for s in Stage}
 
 
-def _days_in_stage(thread: Thread) -> int:
-    """Calendar days, not business days — FR-12's at-risk rule sits outside
-    FR-7's cadence table, the one place PLAN.md is explicit about business days.
-
-    stage_entered_at comes back from SQLite as a naive datetime representing
-    UTC (SQLAlchemy's server_default=func.now() compiles to CURRENT_TIMESTAMP,
-    which SQLite always reports in UTC) — comparing it against naive local
-    time silently produced negative day counts on any machine not on UTC.
-    """
-    now_utc = datetime.now(UTC).replace(tzinfo=None)
-    return (now_utc - thread.stage_entered_at).days
-
-
 def _to_thread_read(thread: Thread, ghost_threshold: int) -> ThreadRead:
     return ThreadRead(
         id=thread.id,
@@ -69,7 +56,7 @@ def _to_thread_read(thread: Thread, ghost_threshold: int) -> ThreadRead:
         created_at=thread.created_at,
         closed_at=thread.closed_at,
         is_ghost_suggested=is_ghost_suggested(thread, ghost_threshold),
-        days_in_stage=_days_in_stage(thread),
+        days_in_stage=days_in_stage(thread, datetime.now(UTC).replace(tzinfo=None)),
     )
 
 

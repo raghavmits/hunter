@@ -4,7 +4,7 @@ The cadence table is a parameter, not read internally via app.config.get_config(
 — keeps this a pure, directly-testable function. Callers pass get_config().cadence.
 """
 
-from datetime import date
+from datetime import date, datetime
 from typing import NamedTuple
 
 from app.business_days import add_business_days
@@ -55,6 +55,28 @@ def is_ghost_suggested(thread: Thread, ghost_threshold: int) -> bool:
     flagged — there's nothing left to suggest for one that's already closed.
     """
     return thread.status == ThreadStatus.OPEN and thread.nudge_number >= ghost_threshold
+
+
+def days_in_stage(thread: Thread, now_utc: datetime) -> int:
+    """Issue #15, moved here (issue #19) so #19's digest can share it without
+    duplicating the UTC fix. Calendar days, not business days — FR-12's
+    at-risk rule sits outside FR-7's cadence table, the one place PLAN.md is
+    explicit about business days.
+
+    `now_utc` is a required parameter, not computed internally via
+    datetime.now() — otherwise this isn't actually a pure function of its
+    inputs, it's silently reading the wall clock, which is exactly the kind
+    of hidden dependency #10/#11 deliberately avoided (cadence and
+    ghost_threshold are both parameters, not fetched internally). Callers
+    pass datetime.now(UTC).replace(tzinfo=None) — naive UTC, comparable to
+    stage_entered_at (see the note below on why it must be UTC).
+
+    stage_entered_at comes back from SQLite as a naive datetime representing
+    UTC (SQLAlchemy's server_default=func.now() compiles to CURRENT_TIMESTAMP,
+    which SQLite always reports in UTC) — comparing it against naive local
+    time silently produced negative day counts on any machine not on UTC.
+    """
+    return (now_utc - thread.stage_entered_at).days
 
 
 def _next_follow_up_date(
