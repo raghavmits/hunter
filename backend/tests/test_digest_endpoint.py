@@ -3,12 +3,11 @@
 import datetime
 
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
-
 from app.db import Base, get_engine
 from app.main import app
 from app.models import Stage, Thread, ThreadStatus
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 TODAY = datetime.date.today()
 NOW_UTC = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
