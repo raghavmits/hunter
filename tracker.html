@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hunter — Contacts &amp; Companies</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --border: #d8d8d8;
+    --header-bg: #f6f6f7;
+    --accent: #2563eb;
+    --accent-fg: #ffffff;
+    --row-alt: #fafafa;
+    --danger: #dc2626;
+    --muted: #6b7280;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  header h1 {
+    font-size: 20px;
+    margin: 0;
+  }
+
+  nav {
+    display: flex;
+    gap: 8px;
+  }
+
+  .nav-btn {
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--fg);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .nav-btn.active {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-color: var(--accent);
+  }
+
+  main {
+    padding: 16px 24px;
+    overflow-x: auto;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .toolbar button {
+    padding: 8px 14px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .count {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 960px;
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    background: var(--header-bg);
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 2px solid var(--border);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  tbody tr:nth-child(even) {
+    background: var(--row-alt);
+  }
+
+  tbody td {
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  td input, td select {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-size: 13px;
+    background: transparent;
+    color: var(--fg);
+    font-family: inherit;
+  }
+
+  td input:hover, td select:hover {
+    border-color: var(--border);
+    background: var(--bg);
+  }
+
+  td input:focus, td select:focus {
+    border-color: var(--border);
+    background: var(--bg);
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+  }
+
+  .derived {
+    color: var(--muted);
+    font-size: 13px;
+    padding: 4px 10px;
+  }
+
+  .delete-btn {
+    padding: 4px 10px;
+    border: 1px solid var(--danger);
+    background: transparent;
+    color: var(--danger);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .delete-btn:hover {
+    background: var(--danger);
+    color: #fff;
+  }
+
+  footer {
+    padding: 16px 24px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Hunter</h1>
+  <nav>
+    <button id="nav-contacts" class="nav-btn active">Contacts</button>
+    <button id="nav-companies" class="nav-btn">Companies</button>
+  </nav>
+</header>
+
+<main>
+  <section id="view-contacts">
+    <div class="toolbar">
+      <button id="add-contact">+ Add contact</button>
+      <span class="count" id="contacts-count"></span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Company</th>
+          <th>Role/Title</th>
+          <th>Contact Mode</th>
+          <th>Warmth</th>
+          <th>Last Connected</th>
+          <th>Next Follow-up</th>
+          <th>Status</th>
+          <th>Hiring Companies</th>
+          <th>Notes</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="contacts-tbody"></tbody>
+    </table>
+  </section>
+
+  <section id="view-companies" hidden>
+    <div class="toolbar">
+      <button id="add-company">+ Add company</button>
+      <span class="count" id="companies-count"></span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>Stage</th>
+          <th>Interest</th>
+          <th>Industry</th>
+          <th>Role</th>
+          <th>URL</th>
+          <th>Careers Page</th>
+          <th>Contact(s)</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="companies-tbody"></tbody>
+    </table>
+  </section>
+</main>
+
+<footer>
+  Stored locally in this browser (localStorage) — nothing leaves your machine, and nothing is shared across browsers or devices.
+</footer>
+
+<script>
+  const CONTACT_MODES = ["LinkedIn", "Email", "Referral", "Cold", "Event/Conference"];
+  const WARMTH_LEVELS = ["Cold", "Warm", "Hot", "Referral Ready"];
+  const STATUSES = ["Reached Out", "No Response", "Replied", "Call Scheduled", "Referred", "Interviewing", "Dead End"];
+  const COMPANY_STAGES = ["Seed", "Series A", "Series B+", "Public"];
+  const INTEREST_LEVELS = ["Low", "Medium", "High"];
+  const INDUSTRIES = ["AI", "Bio/Health", "Energy", "Manufacturing", "Consumer", "Enterprise"];
+  const STORAGE_KEY = "hunterTrackerData";
+
+  function loadData() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      console.error("Could not load saved data, starting fresh.", e);
+    }
+    return { contacts: [], companies: [] };
+  }
+
+  const data = loadData();
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  function textInput(value, onChange, placeholder) {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = value || "";
+    if (placeholder) input.placeholder = placeholder;
+    input.addEventListener("input", () => onChange(input.value));
+    return input;
+  }
+
+  function urlInput(value, onChange) {
+    const input = document.createElement("input");
+    input.type = "url";
+    input.value = value || "";
+    input.placeholder = "https://…";
+    input.addEventListener("input", () => onChange(input.value));
+    return input;
+  }
+
+  function dateInput(value, onChange) {
+    const input = document.createElement("input");
+    input.type = "date";
+    input.value = value || "";
+    input.addEventListener("change", () => onChange(input.value));
+    return input;
+  }
+
+  function selectInput(value, options, onChange) {
+    const select = document.createElement("select");
+    const blank = document.createElement("option");
+    blank.value = "";
+    blank.textContent = "—";
+    select.appendChild(blank);
+    options.forEach((o) => {
+      const opt = document.createElement("option");
+      opt.value = o;
+      opt.textContent = o;
+      if (o === value) opt.selected = true;
+      select.appendChild(opt);
+    });
+    select.addEventListener("change", () => onChange(select.value));
+    return select;
+  }
+
+  function companySelect(contact) {
+    const select = document.createElement("select");
+
+    const none = document.createElement("option");
+    none.value = "";
+    none.textContent = "— none —";
+    select.appendChild(none);
+
+    data.companies
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .forEach((c) => {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = c.name || "(unnamed)";
+        if (c.id === contact.companyId) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+    const addNew = document.createElement("option");
+    addNew.value = "__new__";
+    addNew.textContent = "+ Add new company…";
+    select.appendChild(addNew);
+
+    select.addEventListener("change", () => {
+      if (select.value === "__new__") {
+        const name = prompt("New company name:");
+        if (name && name.trim()) {
+          const newCompany = {
+            id: uid(), name: name.trim(), stage: "", interest: "", industry: "",
+            role: "", url: "", careersPage: "",
+          };
+          data.companies.push(newCompany);
+          contact.companyId = newCompany.id;
+          save();
+          renderContacts();
+        } else {
+          select.value = contact.companyId || "";
+        }
+      } else {
+        contact.companyId = select.value;
+        save();
+      }
+    });
+
+    return select;
+  }
+
+  function deleteButton(onClick) {
+    const btn = document.createElement("button");
+    btn.textContent = "Delete";
+    btn.className = "delete-btn";
+    btn.addEventListener("click", () => {
+      if (confirm("Delete this row? This can't be undone.")) onClick();
+    });
+    return btn;
+  }
+
+  function cell(child) {
+    const td = document.createElement("td");
+    td.appendChild(child);
+    return td;
+  }
+
+  function renderContacts() {
+    const tbody = document.getElementById("contacts-tbody");
+    tbody.innerHTML = "";
+
+    data.contacts.forEach((contact) => {
+      const tr = document.createElement("tr");
+
+      tr.appendChild(cell(textInput(contact.name, (v) => { contact.name = v; save(); }, "Name")));
+      tr.appendChild(cell(companySelect(contact)));
+      tr.appendChild(cell(textInput(contact.title, (v) => { contact.title = v; save(); }, "Title")));
+      tr.appendChild(cell(selectInput(contact.contactMode, CONTACT_MODES, (v) => { contact.contactMode = v; save(); })));
+      tr.appendChild(cell(selectInput(contact.warmth, WARMTH_LEVELS, (v) => { contact.warmth = v; save(); })));
+      tr.appendChild(cell(dateInput(contact.lastConnected, (v) => { contact.lastConnected = v; save(); })));
+      tr.appendChild(cell(dateInput(contact.nextFollowUp, (v) => { contact.nextFollowUp = v; save(); })));
+      tr.appendChild(cell(selectInput(contact.status, STATUSES, (v) => { contact.status = v; save(); })));
+      tr.appendChild(cell(textInput(contact.hiringCompanies, (v) => { contact.hiringCompanies = v; save(); }, "e.g. Acme, Globex")));
+      tr.appendChild(cell(textInput(contact.notes, (v) => { contact.notes = v; save(); }, "Notes")));
+
+      tr.appendChild(cell(deleteButton(() => {
+        data.contacts = data.contacts.filter((c) => c.id !== contact.id);
+        save();
+        renderContacts();
+      })));
+
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById("contacts-count").textContent =
+      data.contacts.length + (data.contacts.length === 1 ? " contact" : " contacts");
+  }
+
+  function renderCompanies() {
+    const tbody = document.getElementById("companies-tbody");
+    tbody.innerHTML = "";
+
+    data.companies.forEach((company) => {
+      const tr = document.createElement("tr");
+
+      tr.appendChild(cell(textInput(company.name, (v) => { company.name = v; save(); }, "Company")));
+      tr.appendChild(cell(selectInput(company.stage, COMPANY_STAGES, (v) => { company.stage = v; save(); })));
+      tr.appendChild(cell(selectInput(company.interest, INTEREST_LEVELS, (v) => { company.interest = v; save(); })));
+      tr.appendChild(cell(selectInput(company.industry, INDUSTRIES, (v) => { company.industry = v; save(); })));
+      tr.appendChild(cell(textInput(company.role, (v) => { company.role = v; save(); }, "Role")));
+      tr.appendChild(cell(urlInput(company.url, (v) => { company.url = v; save(); })));
+      tr.appendChild(cell(urlInput(company.careersPage, (v) => { company.careersPage = v; save(); })));
+
+      const linked = data.contacts.filter((c) => c.companyId === company.id);
+      const contactsTd = document.createElement("td");
+      contactsTd.className = "derived";
+      contactsTd.textContent = linked.length
+        ? linked.map((c) => c.name || "(unnamed)").join(", ")
+        : "—";
+      tr.appendChild(contactsTd);
+
+      tr.appendChild(cell(deleteButton(() => {
+        data.companies = data.companies.filter((c) => c.id !== company.id);
+        data.contacts.forEach((c) => { if (c.companyId === company.id) c.companyId = ""; });
+        save();
+        renderCompanies();
+        renderContacts();
+      })));
+
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById("companies-count").textContent =
+      data.companies.length + (data.companies.length === 1 ? " company" : " companies");
+  }
+
+  document.getElementById("add-contact").addEventListener("click", () => {
+    data.contacts.push({
+      id: uid(), name: "", companyId: "", title: "", contactMode: "",
+      warmth: "", lastConnected: "", nextFollowUp: "", status: "",
+      hiringCompanies: "", notes: "",
+    });
+    save();
+    renderContacts();
+  });
+
+  document.getElementById("add-company").addEventListener("click", () => {
+    data.companies.push({
+      id: uid(), name: "", stage: "", interest: "", industry: "",
+      role: "", url: "", careersPage: "",
+    });
+    save();
+    renderCompanies();
+  });
+
+  function switchView(view) {
+    const contactsSection = document.getElementById("view-contacts");
+    const companiesSection = document.getElementById("view-companies");
+    const contactsBtn = document.getElementById("nav-contacts");
+    const companiesBtn = document.getElementById("nav-companies");
+
+    const showContacts = view === "contacts";
+    contactsSection.hidden = !showContacts;
+    companiesSection.hidden = showContacts;
+    contactsBtn.classList.toggle("active", showContacts);
+    companiesBtn.classList.toggle("active", !showContacts);
+
+    if (showContacts) renderContacts();
+    else renderCompanies();
+  }
+
+  document.getElementById("nav-contacts").addEventListener("click", () => switchView("contacts"));
+  document.getElementById("nav-companies").addEventListener("click", () => switchView("companies"));
+
+  switchView("contacts");
+</script>
+
+</body>
+</html>
