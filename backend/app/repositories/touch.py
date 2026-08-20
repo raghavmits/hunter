@@ -22,6 +22,11 @@ class TouchRepository:
         stmt = select(Touch).where(Touch.occurred_at == occurred_at)
         return list(self.session.execute(stmt).scalars().all())
 
+    def list_all(self) -> list[Touch]:
+        """Issue #21: every touch, all-time, across all threads — the targets
+        endpoint's input counts are cumulative, unlike #20's daily ones."""
+        return list(self.session.execute(select(Touch)).scalars().all())
+
     def create(
         self,
         thread_id: int,

@@ -20,6 +20,11 @@ class StageEventRepository:
         )
         return list(self.session.execute(stmt).scalars().all())
 
+    def list_all(self) -> list[StageEvent]:
+        """Issue #21: every stage_event, all-time, across all threads — the
+        targets endpoint counts distinct threads reaching each stage."""
+        return list(self.session.execute(select(StageEvent)).scalars().all())
+
     def create(
         self,
         thread_id: int,
