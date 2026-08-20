@@ -105,3 +105,14 @@ def test_contribution_survives_the_thread_later_closing(client, company_id) -> N
     stages = _stages(client.get("/api/funnel"))
 
     assert stages["interview"]["count"] == 1
+
+
+def test_funnel_reflects_the_shared_demo_dataset(client, demo_data) -> None:
+    """Issue #39 — a smoke test against the shared, realistic fixture,
+    alongside (not replacing) the precise boundary tests above."""
+    stages = _stages(client.get("/api/funnel"))
+
+    assert stages["replied"]["count"] >= 1
+    assert stages["offer"]["count"] >= 1
+    non_zero_stages = [s["stage"] for s in stages.values() if s["count"] > 0]
+    assert len(non_zero_stages) >= 3

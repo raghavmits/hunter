@@ -104,3 +104,14 @@ def test_outcome_counts_separate_threads_separately(client, company_id) -> None:
     body = client.get("/api/targets").json()
 
     assert body["interviews"]["count"] == 2
+
+
+def test_targets_reflect_the_shared_demo_dataset(client, demo_data) -> None:
+    """Issue #39 — a smoke test against the shared, realistic fixture,
+    alongside (not replacing) the precise boundary tests above."""
+    body = client.get("/api/targets").json()
+
+    assert body["new_connections_made"]["count"] >= 1
+    assert body["screens_recruiter_calls"]["count"] >= 1
+    assert body["interviews"]["count"] >= 1
+    assert body["offers"]["count"] >= 1

@@ -164,3 +164,15 @@ def test_digest_row_carries_ghost_suggestion_state(client, company_id) -> None:
     assert rows[below_threshold_id]["is_ghost_suggested"] is False
     assert rows[at_threshold_id]["nudge_number"] == 3
     assert rows[at_threshold_id]["is_ghost_suggested"] is True
+
+
+def test_digest_reflects_the_shared_demo_dataset(client, demo_data) -> None:
+    """Issue #39 — a smoke test against the shared, realistic fixture,
+    alongside (not replacing) the precise boundary tests above."""
+    digest = client.get("/api/digest").json()
+
+    assert len(digest["overdue"]) >= 1
+    assert len(digest["due_today"]) >= 1
+    assert len(digest["at_risk"]) >= 1
+    assert any(row["is_ghost_suggested"] for row in digest["overdue"])
+    assert digest["live_conversation_count"] >= 1
