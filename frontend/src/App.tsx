@@ -3,6 +3,7 @@ import { Layout } from "./components/Layout";
 import { CorpusPage } from "./pages/CorpusPage";
 import { DigestPage } from "./pages/DigestPage";
 import { FunnelPage } from "./pages/FunnelPage";
+import { ThreadDetailPage } from "./pages/ThreadDetailPage";
 import { ThreadsPage } from "./pages/ThreadsPage";
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
         <Route element={<Layout />}>
           <Route index element={<DigestPage />} />
           <Route path="threads" element={<ThreadsPage />} />
+          <Route path="threads/:id" element={<ThreadDetailPage />} />
           <Route path="funnel" element={<FunnelPage />} />
           <Route path="corpus" element={<CorpusPage />} />
         </Route>

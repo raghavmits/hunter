@@ -1,5 +1,6 @@
 // A plain table per digest section — explicitly not cards (issue #28).
 import type { ReactNode } from "react";
+import { Link } from "react-router";
 import type { DigestRow } from "../api/digest";
 
 interface Props {
@@ -34,7 +35,9 @@ export function DigestSection({ title, rows, emptyMessage, daysColumnLabel, days
           <tbody>
             {rows.map((row) => (
               <tr key={row.thread_id}>
-                <td>{row.company_name}</td>
+                <td>
+                  <Link to={`/threads/${row.thread_id}`}>{row.company_name}</Link>
+                </td>
                 <td>{row.contact_name ?? "—"}</td>
                 <td>{row.stage}</td>
                 <td>{daysValue(row)}</td>

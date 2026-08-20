@@ -1,6 +1,14 @@
-// Thread mutation endpoints used for digest row actions (issue #29).
-// Matches app/schemas/thread.py, app/schemas/touch.py, app/schemas/stage_event.py.
+// Thread endpoints for digest row actions (#29), quick-add (#30), and the
+// thread detail page (#31). Matches app/schemas/thread.py, touch.py, stage_event.py.
+import type { Stage } from "./digest";
 import { apiFetch } from "./client";
+
+export const STAGE_ORDER: Stage[] = ["outreach", "replied", "screen", "interview", "offer"];
+
+export function nextStage(stage: Stage): Stage | null {
+  const index = STAGE_ORDER.indexOf(stage);
+  return index >= 0 && index < STAGE_ORDER.length - 1 ? STAGE_ORDER[index + 1] : null;
+}
 
 export type TouchKind =
   | "cold_outreach"
@@ -21,6 +29,25 @@ export const TOUCH_KIND_LABELS: Record<TouchKind, string> = {
   long_term_nurture: "Long-term nurture",
 };
 
+export type TouchDirection = "outbound" | "inbound";
+
+export const TOUCH_DIRECTION_LABELS: Record<TouchDirection, string> = {
+  outbound: "Outbound",
+  inbound: "Inbound",
+};
+
+export type TouchChannel = "email" | "linkedin" | "referral" | "phone" | "in_person" | "portal" | "other";
+
+export const TOUCH_CHANNEL_LABELS: Record<TouchChannel, string> = {
+  email: "Email",
+  linkedin: "LinkedIn",
+  referral: "Referral",
+  phone: "Phone",
+  in_person: "In person",
+  portal: "Portal",
+  other: "Other",
+};
+
 export type TerminalStatus = "rejected" | "ghosted" | "withdrawn" | "closed";
 
 export const TERMINAL_STATUS_LABELS: Record<TerminalStatus, string> = {
@@ -30,10 +57,80 @@ export const TERMINAL_STATUS_LABELS: Record<TerminalStatus, string> = {
   closed: "Closed",
 };
 
-export function logTouch(threadId: number, kind: TouchKind, note: string | undefined): Promise<unknown> {
+export interface TouchRead {
+  id: number;
+  thread_id: number;
+  kind: TouchKind;
+  direction: TouchDirection;
+  channel: TouchChannel;
+  occurred_at: string;
+  note: string | null;
+  created_at: string;
+}
+
+export interface StageEventRead {
+  id: number;
+  thread_id: number;
+  from_stage: Stage | TerminalStatus | null;
+  to_stage: Stage | TerminalStatus;
+  occurred_at: string;
+  note: string | null;
+}
+
+export type ThreadStatus = "open" | TerminalStatus;
+
+export interface ThreadDetail {
+  id: number;
+  company_id: number;
+  contact_id: number | null;
+  role_title: string | null;
+  role_family: RoleFamily | null;
+  motion: Motion | null;
+  stage: Stage;
+  status: ThreadStatus;
+  stage_entered_at: string;
+  next_follow_up_date: string | null;
+  nudge_number: number;
+  follow_up_pinned: boolean;
+  jd_url: string | null;
+  notes: string | null;
+  created_at: string;
+  closed_at: string | null;
+  is_ghost_suggested: boolean;
+  days_in_stage: number;
+  company: { id: number; name: string };
+  contact: { id: number; full_name: string } | null;
+  touches: TouchRead[];
+  stage_events: StageEventRead[];
+}
+
+export function getThread(threadId: number): Promise<ThreadDetail> {
+  return apiFetch<ThreadDetail>(`/threads/${threadId}`);
+}
+
+export interface TouchCreateInput {
+  kind: TouchKind;
+  direction: TouchDirection;
+  channel: TouchChannel;
+  occurred_at?: string;
+  note?: string;
+}
+
+export function createTouch(threadId: number, input: TouchCreateInput): Promise<unknown> {
   return apiFetch(`/threads/${threadId}/touches`, {
     method: "POST",
-    body: JSON.stringify({ kind, direction: "outbound", channel: "email", note: note || null }),
+    body: JSON.stringify({ ...input, note: input.note || null }),
+  });
+}
+
+export function logTouch(threadId: number, kind: TouchKind, note: string | undefined): Promise<unknown> {
+  return createTouch(threadId, { kind, direction: "outbound", channel: "email", note });
+}
+
+export function setFollowUp(threadId: number, nextFollowUpDate: string): Promise<unknown> {
+  return apiFetch(`/threads/${threadId}/follow-up`, {
+    method: "PATCH",
+    body: JSON.stringify({ next_follow_up_date: nextFollowUpDate }),
   });
 }
 

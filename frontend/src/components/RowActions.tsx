@@ -1,9 +1,14 @@
 // In-place digest row actions: log, snooze, advance, close (issue #29).
 import { useState } from "react";
 import type { DigestRow, Stage } from "../api/digest";
-import { TERMINAL_STATUS_LABELS, TOUCH_KIND_LABELS, type TerminalStatus, type TouchKind } from "../api/threads";
+import {
+  nextStage as computeNextStage,
+  TERMINAL_STATUS_LABELS,
+  TOUCH_KIND_LABELS,
+  type TerminalStatus,
+  type TouchKind,
+} from "../api/threads";
 
-const STAGE_ORDER: Stage[] = ["outreach", "replied", "screen", "interview", "offer"];
 const SNOOZE_OPTIONS = [1, 3, 7];
 
 interface Props {
@@ -21,8 +26,7 @@ export function RowActions({ row, pending, error, onLog, onSnooze, onAdvance, on
   const [logKind, setLogKind] = useState<TouchKind>("cold_outreach");
   const [logNote, setLogNote] = useState("");
 
-  const stageIndex = STAGE_ORDER.indexOf(row.stage);
-  const nextStage = stageIndex >= 0 && stageIndex < STAGE_ORDER.length - 1 ? STAGE_ORDER[stageIndex + 1] : null;
+  const next = computeNextStage(row.stage);
 
   function submitLog() {
     onLog(logKind, logNote.trim() || undefined);
@@ -51,9 +55,9 @@ export function RowActions({ row, pending, error, onLog, onSnooze, onAdvance, on
         </button>
       ))}
 
-      {nextStage && (
-        <button type="button" disabled={pending} onClick={() => onAdvance(nextStage)}>
-          Advance to {nextStage}
+      {next && (
+        <button type="button" disabled={pending} onClick={() => onAdvance(next)}>
+          Advance to {next}
         </button>
       )}
 
