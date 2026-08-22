@@ -8,7 +8,11 @@ Project: a local, single-user job search tracker.
 
 FastAPI + SQLAlchemy + Alembic + Postgres on the backend, React + Vite + TypeScript
 on the frontend. Python tooling is the Astral set: `uv`, `pytest`, `ruff`, `ty`.
-No LLM dependency anywhere in v1 — the app must run offline and deterministically.
+No LLM dependency — the app must run offline and deterministically.
+
+Backend lives in `app/`. Frontend lives in `frontend/` (no UI library, plain CSS).
+API calls from the frontend proxy to `http://localhost:8000` via `frontend/vite.config.ts`.
+Tests run against a `hunter_test` Postgres database (created automatically by the fixture).
 
 ## Commands
 

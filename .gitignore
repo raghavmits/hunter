@@ -1,6 +1,5 @@
 # Python
 __pycache__/
-*.py[cod]
 .venv/
 *.egg-info/
 
@@ -8,17 +7,3 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .ty_cache/
-
-# Database — hunter.db is tracked and committed as the backup (see PLAN.md §4).
-# Only the WAL sidecars are ignored; they are transient and never the source of truth.
-*.db-wal
-*.db-shm
-*.sqlite-wal
-*.sqlite-shm
-
-# Scratch database from scripts/seed_demo_data.py (#39) — throwaway, never the backup.
-demo.db
-
-# Editors / OS
-.DS_Store
-*.bak
