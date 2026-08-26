@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { api } from "./api";
+import { DeleteButton, SelectCell, TextCell, Toolbar, UrlCell } from "./cells";
 import type { Company } from "./types";
 import { COMPANY_STAGES, INDUSTRIES, INTEREST_LEVELS } from "./types";
 
@@ -46,12 +47,7 @@ export function CompaniesView({ companies, onReload, highlightId, onHighlightDon
 
   return (
     <section>
-      <div className="toolbar">
-        <button onClick={addCompany}>+ Add company</button>
-        <span className="count">
-          {companies.length} {companies.length === 1 ? "company" : "companies"}
-        </span>
-      </div>
+      <Toolbar count={companies.length} noun="company" plural="companies" onAdd={addCompany} />
 
       <table>
         <thead>
@@ -71,83 +67,52 @@ export function CompaniesView({ companies, onReload, highlightId, onHighlightDon
         <tbody>
           {companies.map((company) => (
             <tr key={company.id} ref={(el) => { rowRefs.current[company.id] = el; }}>
-              <td>
-                <input
-                  type="text"
-                  defaultValue={company.name ?? ""}
-                  placeholder="Company"
-                  onChange={(e) => save(company.id, { name: e.target.value })}
-                />
-              </td>
-              <td>
-                <select
-                  defaultValue={company.stage ?? ""}
-                  onChange={(e) => save(company.id, { stage: e.target.value || null })}
-                >
-                  <option value="">—</option>
-                  {COMPANY_STAGES.map((o) => <option key={o} value={o}>{o}</option>)}
-                </select>
-              </td>
-              <td>
-                <select
-                  defaultValue={company.interest ?? ""}
-                  onChange={(e) => save(company.id, { interest: e.target.value || null })}
-                >
-                  <option value="">—</option>
-                  {INTEREST_LEVELS.map((o) => <option key={o} value={o}>{o}</option>)}
-                </select>
-              </td>
-              <td>
-                <select
-                  defaultValue={company.industry ?? ""}
-                  onChange={(e) => save(company.id, { industry: e.target.value || null })}
-                >
-                  <option value="">—</option>
-                  {INDUSTRIES.map((o) => <option key={o} value={o}>{o}</option>)}
-                </select>
-              </td>
-              <td>
-                <input
-                  type="text"
-                  defaultValue={company.role ?? ""}
-                  placeholder="Role"
-                  onChange={(e) => save(company.id, { role: e.target.value })}
-                />
-              </td>
-              <td>
-                <input
-                  type="url"
-                  defaultValue={company.url ?? ""}
-                  placeholder="https://…"
-                  onChange={(e) => save(company.id, { url: e.target.value })}
-                />
-              </td>
-              <td>
-                <input
-                  type="url"
-                  defaultValue={company.careers_page ?? ""}
-                  placeholder="https://…"
-                  onChange={(e) => save(company.id, { careers_page: e.target.value })}
-                />
-              </td>
+              <TextCell
+                defaultValue={company.name ?? ""}
+                placeholder="Company"
+                onChange={(v) => save(company.id, { name: v })}
+              />
+              <SelectCell
+                defaultValue={company.stage ?? ""}
+                options={COMPANY_STAGES}
+                onChange={(v) => save(company.id, { stage: v || null })}
+              />
+              <SelectCell
+                defaultValue={company.interest ?? ""}
+                options={INTEREST_LEVELS}
+                onChange={(v) => save(company.id, { interest: v || null })}
+              />
+              <SelectCell
+                defaultValue={company.industry ?? ""}
+                options={INDUSTRIES}
+                onChange={(v) => save(company.id, { industry: v || null })}
+              />
+              <TextCell
+                defaultValue={company.role ?? ""}
+                placeholder="Role"
+                onChange={(v) => save(company.id, { role: v })}
+              />
+              <UrlCell
+                defaultValue={company.url ?? ""}
+                placeholder="https://…"
+                onChange={(v) => save(company.id, { url: v })}
+              />
+              <UrlCell
+                defaultValue={company.careers_page ?? ""}
+                placeholder="https://…"
+                onChange={(v) => save(company.id, { careers_page: v })}
+              />
               <td className="derived">
                 {company.contact_names.length > 0
                   ? company.contact_names.join(", ")
                   : "—"}
               </td>
-              <td>
-                <input
-                  type="text"
-                  defaultValue={company.notes ?? ""}
-                  placeholder="Notes"
-                  onChange={(e) => save(company.id, { notes: e.target.value })}
-                />
-              </td>
-              <td>
-                <button className="delete-btn" onClick={() => deleteCompany(company.id)}>
-                  Delete
-                </button>
-              </td>
+              <TextCell
+                defaultValue={company.notes ?? ""}
+                placeholder="Notes"
+                onChange={(v) => save(company.id, { notes: v })}
+              />
+              <DeleteButton onClick={() => deleteCompany(company.id)} />
             </tr>
           ))}
         </tbody>
