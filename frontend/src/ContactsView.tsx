@@ -1,5 +1,6 @@
 import { useCallback, useRef } from "react";
 import { api } from "./api";
+import { DateCell, DeleteButton, SelectCell, TextCell, Toolbar } from "./cells";
 import { HiringCompaniesCell } from "./HiringCompaniesCell";
 import type { Company, Contact } from "./types";
 import { CONTACT_MODES, STATUSES, WARMTH_LEVELS } from "./types";
@@ -39,12 +40,7 @@ export function ContactsView({ contacts, companies, onReload, onNavigateToCompan
 
   return (
     <section>
-      <div className="toolbar">
-        <button onClick={addContact}>+ Add contact</button>
-        <span className="count">
-          {contacts.length} {contacts.length === 1 ? "contact" : "contacts"}
-        </span>
-      </div>
+      <Toolbar count={contacts.length} noun="contact" onAdd={addContact} />
 
       <table>
         <thead>
@@ -65,14 +61,11 @@ export function ContactsView({ contacts, companies, onReload, onNavigateToCompan
         <tbody>
           {contacts.map((contact) => (
             <tr key={contact.id}>
-              <td>
-                <input
-                  type="text"
-                  defaultValue={contact.name ?? ""}
-                  placeholder="Name"
-                  onChange={(e) => save(contact.id, { name: e.target.value })}
-                />
-              </td>
+              <TextCell
+                defaultValue={contact.name ?? ""}
+                placeholder="Name"
+                onChange={(v) => save(contact.id, { name: v })}
+              />
               <td>
                 <select
                   defaultValue={contact.company_id ?? ""}
@@ -101,76 +94,46 @@ export function ContactsView({ contacts, companies, onReload, onNavigateToCompan
                   <option value="__new__">+ Add new company…</option>
                 </select>
               </td>
-              <td>
-                <input
-                  type="text"
-                  defaultValue={contact.title ?? ""}
-                  placeholder="Title"
-                  onChange={(e) => save(contact.id, { title: e.target.value })}
-                />
-              </td>
-              <td>
-                <select
-                  defaultValue={contact.contact_mode ?? ""}
-                  onChange={(e) => save(contact.id, { contact_mode: e.target.value || null })}
-                >
-                  <option value="">—</option>
-                  {CONTACT_MODES.map((o) => <option key={o} value={o}>{o}</option>)}
-                </select>
-              </td>
-              <td>
-                <select
-                  defaultValue={contact.warmth ?? ""}
-                  onChange={(e) => save(contact.id, { warmth: e.target.value || null })}
-                >
-                  <option value="">—</option>
-                  {WARMTH_LEVELS.map((o) => <option key={o} value={o}>{o}</option>)}
-                </select>
-              </td>
-              <td>
-                <input
-                  type="date"
-                  defaultValue={contact.last_connected ?? ""}
-                  onChange={(e) => save(contact.id, { last_connected: e.target.value || null })}
-                />
-              </td>
-              <td>
-                <input
-                  type="date"
-                  defaultValue={contact.next_follow_up ?? ""}
-                  onChange={(e) => save(contact.id, { next_follow_up: e.target.value || null })}
-                />
-              </td>
-              <td>
-                <select
-                  defaultValue={contact.status ?? ""}
-                  onChange={(e) => save(contact.id, { status: e.target.value || null })}
-                >
-                  <option value="">—</option>
-                  {STATUSES.map((o) => <option key={o} value={o}>{o}</option>)}
-                </select>
-              </td>
-              <td>
-                <HiringCompaniesCell
-                  value={contact.hiring_companies ?? ""}
-                  companies={companies}
-                  onChange={(v) => save(contact.id, { hiring_companies: v || null })}
-                  onNavigateToCompany={onNavigateToCompany}
-                />
-              </td>
-              <td>
-                <input
-                  type="text"
-                  defaultValue={contact.notes ?? ""}
-                  placeholder="Notes"
-                  onChange={(e) => save(contact.id, { notes: e.target.value })}
-                />
-              </td>
-              <td>
-                <button className="delete-btn" onClick={() => deleteContact(contact.id)}>
-                  Delete
-                </button>
-              </td>
+              <TextCell
+                defaultValue={contact.title ?? ""}
+                placeholder="Title"
+                onChange={(v) => save(contact.id, { title: v })}
+              />
+              <SelectCell
+                defaultValue={contact.contact_mode ?? ""}
+                options={CONTACT_MODES}
+                onChange={(v) => save(contact.id, { contact_mode: v || null })}
+              />
+              <SelectCell
+                defaultValue={contact.warmth ?? ""}
+                options={WARMTH_LEVELS}
+                onChange={(v) => save(contact.id, { warmth: v || null })}
+              />
+              <DateCell
+                defaultValue={contact.last_connected ?? ""}
+                onChange={(v) => save(contact.id, { last_connected: v || null })}
+              />
+              <DateCell
+                defaultValue={contact.next_follow_up ?? ""}
+                onChange={(v) => save(contact.id, { next_follow_up: v || null })}
+              />
+              <SelectCell
+                defaultValue={contact.status ?? ""}
+                options={STATUSES}
+                onChange={(v) => save(contact.id, { status: v || null })}
+              />
+              <HiringCompaniesCell
+                value={contact.hiring_companies ?? ""}
+                companies={companies}
+                onChange={(v) => save(contact.id, { hiring_companies: v || null })}
+                onNavigateToCompany={onNavigateToCompany}
+              />
+              <TextCell
+                defaultValue={contact.notes ?? ""}
+                placeholder="Notes"
+                onChange={(v) => save(contact.id, { notes: v })}
+              />
+              <DeleteButton onClick={() => deleteContact(contact.id)} />
             </tr>
           ))}
         </tbody>
